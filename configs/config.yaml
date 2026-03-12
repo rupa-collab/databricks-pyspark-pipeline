@@ -1,0 +1,8 @@
+paths:
+  raw_orders: "/mnt/raw/orders"
+  bronze_orders: "/mnt/delta/bronze/orders"
+  silver_orders: "/mnt/delta/silver/orders"
+  gold_sales: "/mnt/delta/gold/product_sales"
+
+spark:
+  app_name: "DatabricksOrdersPipeline"

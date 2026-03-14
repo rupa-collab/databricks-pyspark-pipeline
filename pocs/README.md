@@ -8,6 +8,7 @@ This folder contains production-style POCs aligned to reliability, incremental p
 - `POC3_PERF_PROFILING.md` — Join/aggregation performance profiling and tuning.
 
 ## Notebooks
+- `notebooks/00a_ingest_datasets.py`
 - `notebooks/00_setup_pocs.py`
 - `notebooks/01_poc1_batch_quality.py`
 - `notebooks/02_poc2_incremental_cdc.py`
@@ -22,4 +23,4 @@ Required columns used in the POCs:
 - Retail: `InvoiceNo`, `StockCode`, `Description`, `Quantity`, `InvoiceDate`, `UnitPrice`, `CustomerID`, `Country`
 - Banking: `step`, `type`, `amount`, `nameOrig`, `oldbalanceOrg`, `newbalanceOrig`, `nameDest`, `oldbalanceDest`, `newbalanceDest`, `isFraud`, `isFlaggedFraud`
 
-Update the paths in `notebooks/00_setup_pocs.py` to point to your dataset locations in DBFS.
+Datasets are staged under `/Volumes/workspace/default/datasets/` by `notebooks/00a_ingest_datasets.py`.

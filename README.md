@@ -16,6 +16,7 @@ Raw Data -> Bronze -> Silver -> Gold
 - Performance profiling and tuning
 
 POC notebooks and docs live in:
+- `notebooks/00a_ingest_datasets.py`
 - `notebooks/00_setup_pocs.py`
 - `notebooks/01_poc1_batch_quality.py`
 - `notebooks/02_poc2_incremental_cdc.py`
@@ -30,5 +31,6 @@ POC notebooks and docs live in:
 python main_pipeline.py
 
 ## Run POCs (Databricks)
-1. Open `notebooks/00_setup_pocs.py` and set dataset paths.
-2. Run each POC notebook in order.
+1. Run `notebooks/00a_ingest_datasets.py` to download and stage datasets to `/Volumes/workspace/default/datasets/`.
+2. Run `notebooks/00_setup_pocs.py`.
+3. Run each POC notebook in order.

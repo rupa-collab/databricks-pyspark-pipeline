@@ -5,11 +5,11 @@
 DB_NAME = "pyspark_pocs"
 BASE_PATH = "dbfs:/tmp/pyspark_pocs"
 
-# Retail dataset (UCI Online Retail). CSV version should be uploaded to DBFS.
-RAW_ORDERS_PATH = "dbfs:/FileStore/datasets/online_retail/online_retail.csv"
+# Retail dataset (UCI Online Retail). CSV export staged in UC Volumes.
+RAW_ORDERS_PATH = "dbfs:/Volumes/workspace/default/datasets/online_retail/online_retail.csv"
 
-# Banking dataset (Cifer Fraud Detection, PaySim-structured). Upload a CSV part to DBFS.
-RAW_CUSTOMERS_PATH = "dbfs:/FileStore/datasets/cifer_fraud/Cifer-Fraud-Detection-Dataset-AF-part-1-14.csv"
+# Banking dataset (Cifer Fraud Detection, PaySim-structured). CSV staged in UC Volumes.
+RAW_CUSTOMERS_PATH = "dbfs:/Volumes/workspace/default/datasets/cifer_fraud/Cifer-Fraud-Detection-Dataset-AF-part-1-14.csv"
 
 # Optional products dataset. Leave as default to derive from retail data.
 RAW_PRODUCTS_PATH = ""

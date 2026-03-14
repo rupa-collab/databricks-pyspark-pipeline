@@ -1,8 +1,9 @@
 paths:
-  raw_orders: "/mnt/raw/orders"
-  bronze_orders: "/mnt/delta/bronze/orders"
-  silver_orders: "/mnt/delta/silver/orders"
-  gold_sales: "/mnt/delta/gold/product_sales"
+  raw_orders: "dbfs:/Volumes/workspace/default/files/orders.csv"
+  bronze_orders: "dbfs:/Volumes/workspace/default/files/bronze/orders"
+  silver_orders: "dbfs:/Volumes/workspace/default/files/silver/orders"
+  gold_sales: "dbfs:/Volumes/workspace/default/files/gold/product_sales"
+
 
 spark:
   app_name: "DatabricksOrdersPipeline"

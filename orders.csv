@@ -1,0 +1,4 @@
+order_id,product_id,amount,order_status
+101,10,200,COMPLETED
+102,11,150,COMPLETED
+103,12,-50,FAILED

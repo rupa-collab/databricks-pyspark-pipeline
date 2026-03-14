@@ -21,9 +21,12 @@ BANKING_CSV = f"{BANKING_DIR}/Cifer-Fraud-Detection-Dataset-AF-part-1-14.csv"
 
 # COMMAND ----------
 # Source URLs (public)
-
 UCI_RETAIL_ZIP_URL = "https://archive.ics.uci.edu/static/public/352/online+retail.zip"
+RETAIL_CSV_URL = ""  # Optional direct CSV URL if you have one
 CIFER_BANKING_CSV_URL = "https://huggingface.co/datasets/CiferAI/Cifer-Fraud-Detection-Dataset-AF/resolve/main/Cifer-Fraud-Detection-Dataset-AF-part-1-14.csv"
+
+# Some clusters forbid local filesystem access. Keep this off unless allowed.
+ALLOW_LOCAL_FS = False
 
 # COMMAND ----------
 # Create target directories
@@ -35,7 +38,6 @@ dbutils.fs.mkdirs(BANKING_DIR)
 # Download helper
 
 import os
-import requests
 
 
 def dbfs_file_exists(path: str) -> bool:
@@ -47,64 +49,47 @@ def dbfs_file_exists(path: str) -> bool:
         return False
 
 
-def dbfs_path_to_local(path: str) -> str:
-    # Prefer UC Volumes POSIX path (no /dbfs), fallback to /dbfs if needed.
-    if path.startswith("dbfs:/Volumes"):
-        return path.replace("dbfs:", "")
-    return f"/dbfs{path.replace('dbfs:', '')}"
-
-
 def download_to_dbfs(url: str, dbfs_path: str):
     if dbfs_file_exists(dbfs_path):
         print(f"Exists: {dbfs_path}")
         return
 
-    # Download to local tmp then copy to DBFS/Volumes
-    local_tmp = f"/tmp/{os.path.basename(dbfs_path)}"
-    print(f"Downloading: {url} -> {local_tmp}")
-    with requests.get(url, stream=True, timeout=60) as r:
-        r.raise_for_status()
-        with open(local_tmp, "wb") as f:
-            for chunk in r.iter_content(chunk_size=1024 * 1024):
-                if chunk:
-                    f.write(chunk)
-
-    target_local = dbfs_path_to_local(dbfs_path)
-    os.makedirs(os.path.dirname(target_local), exist_ok=True)
-    dbutils.fs.cp(f"file:{local_tmp}", dbfs_path, True)
+    print(f"Downloading: {url} -> {dbfs_path}")
+    dbutils.fs.cp(url, dbfs_path, True)
 
 # COMMAND ----------
-# Retail: download zip from UCI
+# Retail: prefer direct CSV if available; otherwise download zip only.
 
 try:
-    download_to_dbfs(UCI_RETAIL_ZIP_URL, RETAIL_ZIP)
+    if RETAIL_CSV_URL:
+        download_to_dbfs(RETAIL_CSV_URL, RETAIL_CSV)
+    else:
+        download_to_dbfs(UCI_RETAIL_ZIP_URL, RETAIL_ZIP)
+        print("Retail ZIP downloaded. If your cluster forbids local filesystem access,")
+        print("upload a CSV export manually or set RETAIL_CSV_URL to a direct CSV URL.")
 except Exception as exc:
     print(f"Retail download failed: {exc}")
 
 # COMMAND ----------
-# Extract retail zip and convert XLSX -> CSV
+# Optional: extract retail zip and convert XLSX -> CSV (requires local FS access)
 
-import zipfile
-
-zip_local = dbfs_path_to_local(RETAIL_ZIP)
-extract_dir = dbfs_path_to_local(RETAIL_DIR)
-
-if os.path.exists(zip_local):
-    with zipfile.ZipFile(zip_local, "r") as zf:
-        zf.extractall(extract_dir)
-
-# Convert Excel to CSV (requires pandas + openpyxl)
-try:
+if ALLOW_LOCAL_FS:
+    import zipfile
     import pandas as pd
-    xls_local = dbfs_path_to_local(RETAIL_XLS)
-    csv_local = dbfs_path_to_local(RETAIL_CSV)
+
+    zip_local = f"/dbfs{RETAIL_ZIP.replace('dbfs:', '')}"
+    extract_dir = f"/dbfs{RETAIL_DIR.replace('dbfs:', '')}"
+
+    if os.path.exists(zip_local):
+        with zipfile.ZipFile(zip_local, "r") as zf:
+            zf.extractall(extract_dir)
+
+    xls_local = f"/dbfs{RETAIL_XLS.replace('dbfs:', '')}"
+    csv_local = f"/dbfs{RETAIL_CSV.replace('dbfs:', '')}"
     if os.path.exists(xls_local) and not os.path.exists(csv_local):
         df = pd.read_excel(xls_local)
         df.to_csv(csv_local, index=False)
         print(f"Wrote {RETAIL_CSV}")
-except Exception as exc:
-    print("Excel -> CSV conversion failed. If pandas/openpyxl is missing, convert manually and upload CSV.")
-    print(exc)
 
 # COMMAND ----------
 # Banking: download Cifer Fraud Detection CSV

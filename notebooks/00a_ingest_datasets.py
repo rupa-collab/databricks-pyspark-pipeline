@@ -1,13 +1,12 @@
 # Databricks notebook source
-# COMMAND ----------
 # Dataset ingestion helpers (Databricks)
 # Downloads and stages public retail + banking datasets into Unity Catalog Volumes.
 
 # COMMAND ----------
+
 # Target base path provided by user
 
 TARGET_BASE = "dbfs:/Volumes/workspace/default/datasets"
-
 # Derived paths
 RETAIL_DIR = f"{TARGET_BASE}/online_retail"
 BANKING_DIR = f"{TARGET_BASE}/cifer_fraud"
@@ -20,6 +19,7 @@ RETAIL_CSV = f"{RETAIL_DIR}/online_retail.csv"
 BANKING_CSV = f"{BANKING_DIR}/Cifer-Fraud-Detection-Dataset-AF-part-1-14.csv"
 
 # COMMAND ----------
+
 # Source URLs (public)
 UCI_RETAIL_ZIP_URL = "https://archive.ics.uci.edu/static/public/352/online+retail.zip"
 RETAIL_CSV_URL = ""  # Optional direct CSV URL if you have one
@@ -29,12 +29,14 @@ CIFER_BANKING_CSV_URL = "https://huggingface.co/datasets/CiferAI/Cifer-Fraud-Det
 ALLOW_LOCAL_FS = False
 
 # COMMAND ----------
+
 # Create target directories
 
 dbutils.fs.mkdirs(RETAIL_DIR)
 dbutils.fs.mkdirs(BANKING_DIR)
 
 # COMMAND ----------
+
 # Download helper
 
 import os
@@ -58,8 +60,9 @@ def download_to_dbfs(url: str, dbfs_path: str):
     dbutils.fs.cp(url, dbfs_path, True)
 
 # COMMAND ----------
-# Retail: prefer direct CSV if available; otherwise download zip only.
 
+# Retail: prefer direct CSV if available; otherwise download zip only.
+ 
 try:
     if RETAIL_CSV_URL:
         download_to_dbfs(RETAIL_CSV_URL, RETAIL_CSV)
@@ -71,6 +74,7 @@ except Exception as exc:
     print(f"Retail download failed: {exc}")
 
 # COMMAND ----------
+
 # Optional: extract retail zip and convert XLSX -> CSV (requires local FS access)
 
 if ALLOW_LOCAL_FS:
@@ -92,6 +96,7 @@ if ALLOW_LOCAL_FS:
         print(f"Wrote {RETAIL_CSV}")
 
 # COMMAND ----------
+
 # Banking: download Cifer Fraud Detection CSV
 
 try:
@@ -100,6 +105,7 @@ except Exception as exc:
     print(f"Banking download failed: {exc}")
 
 # COMMAND ----------
+
 # Validation: list staged files
 
 print("Retail files:")

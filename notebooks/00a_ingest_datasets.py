@@ -71,7 +71,17 @@ except Exception as exc:
     print(f"Retail download failed: {exc}")
 
 # COMMAND ----------
-# Optional: extract retail zip and convert XLSX -> CSV (requires local FS access)
+# Optional: extract retail zip and convert XLSX -> CSV
+# If local filesystem access is disabled, try spark-excel; otherwise upload CSV manually.
+
+def dbfs_exists(path: str) -> bool:
+    parent = path.rsplit("/", 1)[0]
+    name = path.rsplit("/", 1)[1]
+    try:
+        return any(f.name == name for f in dbutils.fs.ls(parent))
+    except Exception:
+        return False
+
 
 if ALLOW_LOCAL_FS:
     import zipfile
@@ -90,6 +100,24 @@ if ALLOW_LOCAL_FS:
         df = pd.read_excel(xls_local)
         df.to_csv(csv_local, index=False)
         print(f"Wrote {RETAIL_CSV}")
+else:
+    # Try spark-excel if the XLSX is present in DBFS/Volumes
+    if dbfs_exists(RETAIL_XLS) and not dbfs_exists(RETAIL_CSV):
+        try:
+            df = (spark.read.format("com.crealytics.spark.excel")
+                .option("header", "true")
+                .option("inferSchema", "true")
+                .load(RETAIL_XLS)
+            )
+            tmp_dir = f"{RETAIL_DIR}/_tmp_csv"
+            df.coalesce(1).write.mode("overwrite").option("header", "true").csv(tmp_dir)
+            part_file = [f.path for f in dbutils.fs.ls(tmp_dir) if f.name.endswith(".csv")][0]
+            dbutils.fs.cp(part_file, RETAIL_CSV, True)
+            dbutils.fs.rm(tmp_dir, True)
+            print(f"Wrote {RETAIL_CSV} using spark-excel.")
+        except Exception as exc:
+            print("Could not convert XLSX to CSV. If spark-excel is not installed, upload CSV manually.")
+            print(exc)
 
 # COMMAND ----------
 # Banking: download Cifer Fraud Detection CSV

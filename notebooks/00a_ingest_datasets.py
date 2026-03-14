@@ -47,21 +47,31 @@ def dbfs_file_exists(path: str) -> bool:
         return False
 
 
+def dbfs_path_to_local(path: str) -> str:
+    # Prefer UC Volumes POSIX path (no /dbfs), fallback to /dbfs if needed.
+    if path.startswith("dbfs:/Volumes"):
+        return path.replace("dbfs:", "")
+    return f"/dbfs{path.replace('dbfs:', '')}"
+
+
 def download_to_dbfs(url: str, dbfs_path: str):
     if dbfs_file_exists(dbfs_path):
         print(f"Exists: {dbfs_path}")
         return
 
-    local_tmp = f"/dbfs{dbfs_path.replace('dbfs:', '')}"
-    os.makedirs(os.path.dirname(local_tmp), exist_ok=True)
-
-    print(f"Downloading: {url} -> {dbfs_path}")
+    # Download to local tmp then copy to DBFS/Volumes
+    local_tmp = f"/tmp/{os.path.basename(dbfs_path)}"
+    print(f"Downloading: {url} -> {local_tmp}")
     with requests.get(url, stream=True, timeout=60) as r:
         r.raise_for_status()
         with open(local_tmp, "wb") as f:
             for chunk in r.iter_content(chunk_size=1024 * 1024):
                 if chunk:
                     f.write(chunk)
+
+    target_local = dbfs_path_to_local(dbfs_path)
+    os.makedirs(os.path.dirname(target_local), exist_ok=True)
+    dbutils.fs.cp(f"file:{local_tmp}", dbfs_path, True)
 
 # COMMAND ----------
 # Retail: download zip from UCI
@@ -76,8 +86,8 @@ except Exception as exc:
 
 import zipfile
 
-zip_local = f"/dbfs{RETAIL_ZIP.replace('dbfs:', '')}"
-extract_dir = f"/dbfs{RETAIL_DIR.replace('dbfs:', '')}"
+zip_local = dbfs_path_to_local(RETAIL_ZIP)
+extract_dir = dbfs_path_to_local(RETAIL_DIR)
 
 if os.path.exists(zip_local):
     with zipfile.ZipFile(zip_local, "r") as zf:
@@ -86,8 +96,8 @@ if os.path.exists(zip_local):
 # Convert Excel to CSV (requires pandas + openpyxl)
 try:
     import pandas as pd
-    xls_local = f"/dbfs{RETAIL_XLS.replace('dbfs:', '')}"
-    csv_local = f"/dbfs{RETAIL_CSV.replace('dbfs:', '')}"
+    xls_local = dbfs_path_to_local(RETAIL_XLS)
+    csv_local = dbfs_path_to_local(RETAIL_CSV)
     if os.path.exists(xls_local) and not os.path.exists(csv_local):
         df = pd.read_excel(xls_local)
         df.to_csv(csv_local, index=False)

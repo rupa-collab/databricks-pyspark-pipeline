@@ -3,7 +3,8 @@
 # Shared setup for PySpark POCs (Databricks)
 
 DB_NAME = "pyspark_pocs"
-BASE_PATH = "dbfs:/tmp/pyspark_pocs"
+# Use Unity Catalog Volume for writes (public DBFS root is disabled)
+BASE_PATH = "dbfs:/Volumes/workspace/default/datasets/poc_outputs"
 
 # Retail dataset (UCI Online Retail). CSV export staged in UC Volumes.
 RAW_ORDERS_PATH = "dbfs:/Volumes/workspace/default/datasets/online_retail/online_retail.csv"
@@ -22,6 +23,8 @@ BANKING_START_DATE = "2017-01-01"
 
 spark.sql(f"CREATE DATABASE IF NOT EXISTS {DB_NAME}")
 spark.sql(f"USE {DB_NAME}")
+
+dbutils.fs.mkdirs(BASE_PATH)
 
 
 def table_path(name: str) -> str:

@@ -48,9 +48,9 @@ raw_df = (raw_df
     .withColumn(
         "InvoiceDate",
         F.coalesce(
-            F.try_to_timestamp("InvoiceDate", "M/d/yyyy H:mm"),
-            F.try_to_timestamp("InvoiceDate", "d-M-yyyy H:mm"),
-            F.try_to_timestamp("InvoiceDate", "dd-MM-yyyy HH:mm")
+            F.expr("try_to_timestamp(InvoiceDate, 'M/d/yyyy H:mm')"),
+            F.expr("try_to_timestamp(InvoiceDate, 'd-M-yyyy H:mm')"),
+            F.expr("try_to_timestamp(InvoiceDate, 'dd-MM-yyyy HH:mm')")
         )
     )
     .withColumn("InvoiceNo", F.col("InvoiceNo").cast("string"))

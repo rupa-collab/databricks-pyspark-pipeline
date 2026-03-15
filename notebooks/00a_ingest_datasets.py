@@ -73,24 +73,24 @@ try:
 except Exception as exc:
     print(f"Retail download failed: {exc}")
 
-# COMMAND ----------
 
+# COMMAND ----------
 # Optional: extract retail zip and convert XLSX -> CSV (requires local FS access)
+# Optional: extract retail zip and convert XLSX -> CSV
+# If local filesystem access is disabled, try spark-excel; otherwise upload CSV manually.
+
+def dbfs_exists(path: str) -> bool:
+    parent = path.rsplit("/", 1)[0]
+    name = path.rsplit("/", 1)[1]
+    try:
+        return any(f.name == name for f in dbutils.fs.ls(parent))
+    except Exception:
+        return False
+
 
 if ALLOW_LOCAL_FS:
     import zipfile
     import pandas as pd
-
-    zip_local = f"/dbfs{RETAIL_ZIP.replace('dbfs:', '')}"
-    extract_dir = f"/dbfs{RETAIL_DIR.replace('dbfs:', '')}"
-
-    if os.path.exists(zip_local):
-        with zipfile.ZipFile(zip_local, "r") as zf:
-            zf.extractall(extract_dir)
-
-    xls_local = f"/dbfs{RETAIL_XLS.replace('dbfs:', '')}"
-    csv_local = f"/dbfs{RETAIL_CSV.replace('dbfs:', '')}"
-    if os.path.exists(xls_local) and not os.path.exists(csv_local):
         df = pd.read_excel(xls_local)
         df.to_csv(csv_local, index=False)
         print(f"Wrote {RETAIL_CSV}")

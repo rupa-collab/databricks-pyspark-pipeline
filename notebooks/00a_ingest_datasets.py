@@ -75,6 +75,7 @@ except Exception as exc:
 
 
 # COMMAND ----------
+
 # Optional: extract retail zip and convert XLSX -> CSV (requires local FS access)
 # Optional: extract retail zip and convert XLSX -> CSV
 # If local filesystem access is disabled, try spark-excel; otherwise upload CSV manually.
@@ -91,9 +92,9 @@ def dbfs_exists(path: str) -> bool:
 if ALLOW_LOCAL_FS:
     import zipfile
     import pandas as pd
-        df = pd.read_excel(xls_local)
-        df.to_csv(csv_local, index=False)
-        print(f"Wrote {RETAIL_CSV}")
+    df = pd.read_excel(xls_local)
+    df.to_csv(csv_local, index=False)
+    print(f"Wrote {RETAIL_CSV}")
 else:
     # Try spark-excel if the XLSX is present in DBFS/Volumes
     if dbfs_exists(RETAIL_XLS) and not dbfs_exists(RETAIL_CSV):
@@ -124,12 +125,5 @@ except Exception as exc:
 
 # COMMAND ----------
 
-# Validation: list staged files
-
-print("Retail files:")
-for f in dbutils.fs.ls(RETAIL_DIR):
-    print(f.path)
-
-print("Banking files:")
-for f in dbutils.fs.ls(BANKING_DIR):
-    print(f.path)
+display(dbutils.fs.ls(RETAIL_DIR))
+display(dbutils.fs.ls(BANKING_DIR))

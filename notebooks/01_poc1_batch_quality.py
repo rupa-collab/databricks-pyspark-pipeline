@@ -1,9 +1,17 @@
 # Databricks notebook source
-# COMMAND ----------
+# /// script
+# [tool.databricks.environment]
+# environment_version = "2"
+# ///
 # POC 1: Batch Ingestion + Data Quality + Delta Lake
 # Goal: raw -> bronze -> silver with quality gates and metrics
 
 # COMMAND ----------
+
+# MAGIC %run ./00_setup_pocs
+
+# COMMAND ----------
+
 # Run 00_setup_pocs first or paste its cells here.
 
 from pyspark.sql import functions as F
@@ -11,6 +19,7 @@ from pyspark.sql.types import StructType, StructField, StringType, IntegerType, 
 import time
 
 # COMMAND ----------
+
 # UCI Online Retail schema (CSV version)
 
 retail_schema = StructType([
@@ -25,6 +34,7 @@ retail_schema = StructType([
 ])
 
 # COMMAND ----------
+
 # Read raw retail data
 
 start = time.time()
@@ -61,6 +71,7 @@ orders_df.write.format("delta").mode("append").save(bronze_path)
 write_job_metric("poc1_bronze_write_sec", time.time() - start, {"rows": orders_df.count()})
 
 # COMMAND ----------
+
 # Data quality checks and quarantine
 
 required_cols = ["order_id", "customer_id", "product_id", "order_ts", "amount"]
@@ -87,6 +98,7 @@ quality_rows = [
 write_quality_metrics(quality_rows)
 
 # COMMAND ----------
+
 # Silver write
 
 silver_path = table_path("silver_orders")
@@ -99,6 +111,7 @@ except Exception as exc:
     print(f"OPTIMIZE skipped: {exc}")
 
 # COMMAND ----------
+
 # Gold aggregation
 
 gold_path = table_path("gold_sales_by_product")

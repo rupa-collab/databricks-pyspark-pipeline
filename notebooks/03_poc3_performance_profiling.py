@@ -102,3 +102,8 @@ orders_cached.count()
 start = time.time()
 orders_cached.groupBy("product_id").agg(F.sum("amount").alias("total_sales")).count()
 write_job_metric("poc3_cached_agg_sec", time.time() - start, {"cached": True})
+
+# COMMAND ----------
+# Display key outputs (Serverless-friendly)
+
+display(dim_products.limit(5))

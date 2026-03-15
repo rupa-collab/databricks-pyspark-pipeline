@@ -126,3 +126,11 @@ agg_df = clean_df.groupBy("product_id").agg(F.sum("amount").alias("total_sales")
 agg_df.write.format("delta").mode("overwrite").save(gold_path)
 
 write_job_metric("poc1_gold_rows", float(agg_df.count()), {"table": gold_path})
+
+# COMMAND ----------
+# Display key outputs (Serverless-friendly)
+
+display(clean_df.limit(5))
+display(quarantine_df.limit(5))
+display(dup_keys.limit(5))
+display(agg_df.limit(5))

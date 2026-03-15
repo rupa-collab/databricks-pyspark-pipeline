@@ -118,3 +118,9 @@ else:
     )
 
 write_job_metric("poc2_scd2_rows", float(latest_updates.count()), {"batch_date": BATCH_DATE})
+
+# COMMAND ----------
+# Display key outputs (Serverless-friendly)
+
+display(batch_df.limit(5))
+display(latest_updates.limit(5))

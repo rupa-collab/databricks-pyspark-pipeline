@@ -53,10 +53,10 @@ def dbfs_file_exists(path: str) -> bool:
 
 def download_to_dbfs(url: str, dbfs_path: str):
     if dbfs_file_exists(dbfs_path):
-        print(f"Exists: {dbfs_path}")
+        display(f"Exists: {dbfs_path}")
         return
 
-    print(f"Downloading: {url} -> {dbfs_path}")
+    display(f"Downloading: {url} -> {dbfs_path}")
     dbutils.fs.cp(url, dbfs_path, True)
 
 # COMMAND ----------
@@ -68,10 +68,10 @@ try:
         download_to_dbfs(RETAIL_CSV_URL, RETAIL_CSV)
     else:
         download_to_dbfs(UCI_RETAIL_ZIP_URL, RETAIL_ZIP)
-        print("Retail ZIP downloaded. If your cluster forbids local filesystem access,")
-        print("upload a CSV export manually or set RETAIL_CSV_URL to a direct CSV URL.")
+        display("Retail ZIP downloaded. If your cluster forbids local filesystem access,")
+        display("upload a CSV export manually or set RETAIL_CSV_URL to a direct CSV URL.")
 except Exception as exc:
-    print(f"Retail download failed: {exc}")
+    display(f"Retail download failed: {exc}")
 
 
 # COMMAND ----------
@@ -92,9 +92,17 @@ def dbfs_exists(path: str) -> bool:
 if ALLOW_LOCAL_FS:
     import zipfile
     import pandas as pd
-    df = pd.read_excel(xls_local)
-    df.to_csv(csv_local, index=False)
-    print(f"Wrote {RETAIL_CSV}")
+    zip_local = f"/dbfs{RETAIL_ZIP.replace('dbfs:', '')}"
+    extract_dir = f"/dbfs{RETAIL_DIR.replace('dbfs:', '')}"
+    if os.path.exists(zip_local):
+        with zipfile.ZipFile(zip_local, "r") as zf:
+            zf.extractall(extract_dir)
+    xls_local = f"/dbfs{RETAIL_XLS.replace('dbfs:', '')}"
+    csv_local = f"/dbfs{RETAIL_CSV.replace('dbfs:', '')}"
+    if os.path.exists(xls_local):
+        df = pd.read_excel(xls_local)
+        df.to_csv(csv_local, index=False)
+        display(f"Wrote {RETAIL_CSV}")
 else:
     # Try spark-excel if the XLSX is present in DBFS/Volumes
     if dbfs_exists(RETAIL_XLS) and not dbfs_exists(RETAIL_CSV):
@@ -109,10 +117,10 @@ else:
             part_file = [f.path for f in dbutils.fs.ls(tmp_dir) if f.name.endswith(".csv")][0]
             dbutils.fs.cp(part_file, RETAIL_CSV, True)
             dbutils.fs.rm(tmp_dir, True)
-            print(f"Wrote {RETAIL_CSV} using spark-excel.")
+            display(f"Wrote {RETAIL_CSV} using spark-excel.")
         except Exception as exc:
-            print("Could not convert XLSX to CSV. If spark-excel is not installed, upload CSV manually.")
-            print(exc)
+            display("Could not convert XLSX to CSV. If spark-excel is not installed, upload CSV manually.")
+            display(exc)
 
 # COMMAND ----------
 
@@ -121,7 +129,7 @@ else:
 try:
     download_to_dbfs(CIFER_BANKING_CSV_URL, BANKING_CSV)
 except Exception as exc:
-    print(f"Banking download failed: {exc}")
+    display(f"Banking download failed: {exc}")
 
 # COMMAND ----------
 

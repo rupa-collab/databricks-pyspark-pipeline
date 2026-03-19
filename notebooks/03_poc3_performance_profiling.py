@@ -1,9 +1,17 @@
 # Databricks notebook source
-# COMMAND ----------
+# /// script
+# [tool.databricks.environment]
+# environment_version = "2"
+# ///
 # POC 3: Performance + Cost Profiling
 # Goal: demonstrate measurable tuning for joins and aggregations
 
 # COMMAND ----------
+
+# MAGIC %run ./00_setup_pocs
+
+# COMMAND ----------
+
 # Run 00_setup_pocs first or paste its cells here.
 
 from pyspark.sql import functions as F
@@ -11,6 +19,7 @@ from pyspark.sql.types import StructType, StructField, StringType, IntegerType, 
 import time
 
 # COMMAND ----------
+
 # Load or create fact/dim datasets
 
 retail_schema = StructType([
@@ -60,6 +69,7 @@ else:
     )
 
 # COMMAND ----------
+
 # Baseline join (no broadcast)
 
 try:
@@ -73,6 +83,7 @@ join_df.groupBy("category").agg(F.sum("amount").alias("total_sales")).count()
 write_job_metric("poc3_join_baseline_sec", time.time() - start, {"mode": "no_broadcast"})
 
 # COMMAND ----------
+
 # Broadcast join
 
 start = time.time()
@@ -82,6 +93,7 @@ join_df.groupBy("category").agg(F.sum("amount").alias("total_sales")).count()
 write_job_metric("poc3_join_broadcast_sec", time.time() - start, {"mode": "broadcast"})
 
 # COMMAND ----------
+
 # Partition tuning
 
 spark.conf.set("spark.sql.shuffle.partitions", "200")
@@ -97,6 +109,7 @@ orders_df.repartition(50, "product_id") \
 write_job_metric("poc3_partition_50_sec", time.time() - start, {"partitions": 50})
 
 # COMMAND ----------
+
 # Caching
 
 orders_cached = orders_df.cache()
@@ -107,6 +120,7 @@ orders_cached.groupBy("product_id").agg(F.sum("amount").alias("total_sales")).co
 write_job_metric("poc3_cached_agg_sec", time.time() - start, {"cached": True})
 
 # COMMAND ----------
+
 # Display key outputs (Serverless-friendly)
 
 display(dim_products.limit(5))

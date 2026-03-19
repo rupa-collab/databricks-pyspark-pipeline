@@ -97,14 +97,20 @@ orders_df.repartition(50, "product_id") \
 write_job_metric("poc3_partition_50_sec", time.time() - start, {"partitions": 50})
 
 # COMMAND ----------
-# Caching
+# Caching (Serverless may not support persist/cache)
 
-orders_cached = orders_df.cache()
-orders_cached.count()
+try:
+    orders_cached = orders_df.cache()
+    orders_cached.count()
+    cached_flag = True
+except Exception as exc:
+    display(f"Caching not supported on this compute: {exc}")
+    orders_cached = orders_df
+    cached_flag = False
 
 start = time.time()
 orders_cached.groupBy("product_id").agg(F.sum("amount").alias("total_sales")).count()
-write_job_metric("poc3_cached_agg_sec", time.time() - start, {"cached": True})
+write_job_metric("poc3_cached_agg_sec", time.time() - start, {"cached": cached_flag})
 
 # COMMAND ----------
 # Display key outputs (Serverless-friendly)

@@ -62,7 +62,10 @@ else:
 # COMMAND ----------
 # Baseline join (no broadcast)
 
-spark.conf.set("spark.sql.adaptive.enabled", "true")
+try:
+    spark.conf.set("spark.sql.adaptive.enabled", "true")
+except Exception as exc:
+    display(f"Adaptive execution config not available: {exc}")
 start = time.time()
 join_df = orders_df.join(dim_products, on="product_id", how="left")
 join_df.groupBy("category").agg(F.sum("amount").alias("total_sales")).count()

@@ -37,7 +37,7 @@ raw_df = (spark.read.format("csv")
     .load(RAW_CUSTOMERS_PATH)
 )
 
-base_ts = F.unix_timestamp(F.lit(BANKING_START_DATE))
+base_ts = F.unix_timestamp(F.lit(BANKING_START_DATE), "yyyy-MM-dd")
 
 bank_df = (raw_df
     .withColumn("event_ts", F.from_unixtime(base_ts + F.col("step") * F.lit(3600)).cast("timestamp"))

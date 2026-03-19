@@ -1,9 +1,17 @@
 # Databricks notebook source
-# COMMAND ----------
+# /// script
+# [tool.databricks.environment]
+# environment_version = "2"
+# ///
 # POC 2: Incremental Loads + CDC Merge + SCD2
 # Goal: simulate daily drops, upsert to silver, maintain SCD2 dimension
 
 # COMMAND ----------
+
+# MAGIC %run ./00_setup_pocs
+
+# COMMAND ----------
+
 # Run 00_setup_pocs first or paste its cells here.
 
 from pyspark.sql import functions as F
@@ -12,6 +20,7 @@ from pyspark.sql.window import Window
 from delta.tables import DeltaTable
 
 # COMMAND ----------
+
 # Banking schema (PaySim-structured, Cifer Fraud Detection dataset)
 
 paysim_schema = StructType([
@@ -29,6 +38,7 @@ paysim_schema = StructType([
 ])
 
 # COMMAND ----------
+
 # Read raw PaySim data
 
 raw_df = (spark.read.format("csv")
@@ -48,6 +58,7 @@ bank_df = (raw_df
 )
 
 # COMMAND ----------
+
 # Simulate an incremental batch
 
 BATCH_DATE = "2017-01-10"  # change per run
@@ -55,6 +66,7 @@ BATCH_DATE = "2017-01-10"  # change per run
 batch_df = bank_df.filter(F.col("ingest_date") == F.lit(BATCH_DATE).cast("date"))
 
 # COMMAND ----------
+
 # Upsert into silver (CDC merge)
 
 silver_path = table_path("silver_bank_txn")
@@ -73,6 +85,7 @@ else:
 write_job_metric("poc2_silver_upsert_rows", float(batch_df.count()), {"batch_date": BATCH_DATE})
 
 # COMMAND ----------
+
 # SCD Type 2 for account balances (nameOrig)
 
 scd2_path = table_path("gold_account_dim")
@@ -120,6 +133,7 @@ else:
 write_job_metric("poc2_scd2_rows", float(latest_updates.count()), {"batch_date": BATCH_DATE})
 
 # COMMAND ----------
+
 # Display key outputs (Serverless-friendly)
 
 display(batch_df.limit(5))
